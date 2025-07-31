@@ -22,7 +22,35 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+OPENAI_API_KEY=xxx bundle exec irb
+```
+
+```ruby
+# require "textspace"
+require "csv"
+
+model = "openai/text-embedding-3-small"
+
+csv = CSV.new(File.open("tmp/sample_products.csv"))
+texts = csv.map{|r| r[0]}
+
+ts = Textspace.new(model: model, texts: texts)
+ts.estimation
+ts.build_index!
+# ts.ssindex
+# ts.ssindex.save("tmp/embeddings.bin")
+
+
+# 結婚記念日のプレゼント
+# 小学校の入学祝い
+# 安眠グッズ
+# この夏の暑さを乗り切る
+res = ts.fetch_embeddings_openai(["安眠グッズ"])
+query = res[:embeddings]
+ts.index_search(query, 2)
+```
+
 
 ## Development
 
