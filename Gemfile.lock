@@ -1,0 +1,51 @@
+PATH
+  remote: .
+  specs:
+    textspace (0.1.0)
+      openai-ruby
+      tiktoken_ruby
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    domain_name (0.6.20240107)
+    http-accept (1.7.0)
+    http-cookie (1.0.8)
+      domain_name (~> 0.5)
+    json (2.13.2)
+    logger (1.7.0)
+    mime-types (3.7.0)
+      logger
+      mime-types-data (~> 3.2025, >= 3.2025.0507)
+    mime-types-data (3.2025.0722)
+    netrc (0.11.0)
+    openai-ruby (0.1.0)
+      json
+      rest-client
+    rake (12.3.3)
+    rest-client (2.1.0)
+      http-accept (>= 1.7.0, < 2.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
+    tiktoken_ruby (0.0.11.1-aarch64-linux)
+    tiktoken_ruby (0.0.11.1-arm-linux)
+    tiktoken_ruby (0.0.11.1-arm64-darwin)
+    tiktoken_ruby (0.0.11.1-x86_64-darwin)
+    tiktoken_ruby (0.0.11.1-x86_64-linux)
+    tiktoken_ruby (0.0.11.1-x86_64-linux-musl)
+
+PLATFORMS
+  aarch64-linux
+  arm-linux
+  arm64-darwin
+  x86_64-darwin
+  x86_64-linux
+  x86_64-linux-musl
+
+DEPENDENCIES
+  rake (~> 12.0)
+  textspace!
+
+BUNDLED WITH
+   2.6.9
