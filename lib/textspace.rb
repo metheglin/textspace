@@ -11,7 +11,7 @@ class Textspace < DelegateClass(Array)
 
   attr_reader :model, :texts, :chunks
   attr_reader :tokens_count
-  attr_reader :ssindex
+  attr_accessor :ssindex
 
   def initialize(model:, texts: [])
     @model = model.is_a?(Textspace::Provider) ?
@@ -89,6 +89,25 @@ class Textspace < DelegateClass(Array)
     }
   end
 
+  def search(query, k)
+    query = Array(query)
+    res = fetch_embeddings_openai(query)
+    embedding_query = res[:embeddings]
+    index_search(embedding_query, k)
+  end
+
+  def wise_search(query, k)
+    raggerman = Textspace::Raggerman.new(query)
+    keywords, nagation = raggerman.keywords.values_at(:keywords, :negation)
+    res = search(keywords, k)
+    # if nagation != '0'
+    # end
+    sim_values = res[:d].to_a.flatten.map.with_index{|val,idx| [val,idx]}.sort_by{|val, idx| val}.reverse
+    sim_indice = sim_values.first(k).map{|v,idx| idx}
+    indice = res[:i].to_a.flatten.values_at(*sim_indice)
+    self.values_at(*indice)
+  end
+
   private
     def build_chunk(obj)
       obj.is_a?(Chunk) ? obj : Chunk.new(text: obj)
@@ -96,3 +115,4 @@ class Textspace < DelegateClass(Array)
 end
 
 require_relative "./textspace/provider"
+require_relative "./textspace/raggerman"
