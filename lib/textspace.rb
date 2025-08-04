@@ -100,17 +100,19 @@ class Textspace < DelegateClass(Array)
     raggerman = Textspace::Raggerman.new(query)
     keywords, nagation = raggerman.keywords.values_at(:keywords, :negation)
     res = search(keywords, k)
-    # if nagation != '0'
-    # end
     sim_values = res[:d].to_a.flatten.map.with_index{|val,idx| [val,idx]}.sort_by{|val, idx| val}.reverse
-    sim_indice = sim_values.first(k).map{|v,idx| idx}
+    sim_indice = sim_values.first(k*3).map{|v,idx| idx}
     indice = res[:i].to_a.flatten.values_at(*sim_indice)
-    self.values_at(*indice)
+    chunks = self.values_at(*indice)
+    res_filter = raggerman.filter_negation(chunks: chunks, original_keyword: query)
+    pp res_filter
+    ids_excluding = res_filter.split(',')
+    chunks.reject{|chunk| ids_excluding.include?(chunk.id)}.first(k)
   end
 
   private
     def build_chunk(obj)
-      obj.is_a?(Chunk) ? obj : Chunk.new(text: obj)
+      obj.is_a?(Chunk) ? obj : Chunk.new(id: SecureRandom.hex(4), text: obj)
     end
 end
 

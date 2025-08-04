@@ -94,8 +94,17 @@ class Textspace::Raggerman
     end
   end
 
-  # TODO
-  def filter_negation
+  def filter_negation(chunks:, original_keyword:)
+    @filter_negation ||= begin
+      text = chunks.map{|chunk| "{id: \"#{chunk.id}\", text: \"#{chunk.text}\"}"}.join("\n")
+      prompt = <<~EOS
+        以下のECサイトの商品リストのtextから「#{original_keyword}」の条件に明確に反するもののみを返せ。,区切りでidのみをこたえること。
+
+        #{text}
+      EOS
+      pp prompt
+      ask_gpt4o(prompt)
+    end
   end
 
 
