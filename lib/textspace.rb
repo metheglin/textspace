@@ -1,6 +1,7 @@
 require "delegate"
 require "openai"
 require "faiss"
+require "langchain"
 
 class Textspace < DelegateClass(Array)
 
@@ -65,13 +66,15 @@ class Textspace < DelegateClass(Array)
   end
 
   def fetch_embeddings_openai(strs)
-    client = ::OpenAI::Client.new
-    res = client.embeddings.create(
-      model: model.name,
-      input: strs
+    client = ::OpenAI::Client.new(access_token: ENV["OPENAI_API_KEY"])
+    res = client.embeddings(
+      parameters: {
+        model: model.name,
+        input: strs
+      }
     )
-    embeddings = res[:data].map{|d| d[:embedding]}
-    total_tokens = res[:usage][:total_tokens]
+    embeddings = res["data"].map{|d| d["embedding"]}
+    total_tokens = res["usage"]["total_tokens"]
     {
       embeddings: embeddings,
       total_tokens: total_tokens,
@@ -99,6 +102,7 @@ class Textspace < DelegateClass(Array)
   def wise_search(query, k)
     raggerman = Textspace::Raggerman.new(query)
     keywords, nagation = raggerman.keywords.values_at(:keywords, :negation)
+    pp "keywords", keywords
     res = search(keywords, k)
     sim_values = res[:d].to_a.flatten.map.with_index{|val,idx| [val,idx]}.sort_by{|val, idx| val}.reverse
     sim_indice = sim_values.first(k*3).map{|v,idx| idx}
@@ -106,8 +110,21 @@ class Textspace < DelegateClass(Array)
     chunks = self.values_at(*indice)
     res_filter = raggerman.filter_negation(chunks: chunks, original_keyword: query)
     pp res_filter
-    ids_excluding = res_filter.split(',')
+    ids_excluding = res_filter.split(',').map(&:strip)
     chunks.reject{|chunk| ids_excluding.include?(chunk.id)}.first(k)
+  end
+
+  def assistant_search(query, k)
+    llm = Langchain::LLM::OpenAI.new(
+      api_key: ENV["OPENAI_API_KEY"],
+    )
+    rag_tool = Textspace::AssistantRagTool.new(textspace: self)
+    assistant = Langchain::Assistant.new(
+      llm: llm,
+      instructions: "あなたはECサイトのユーザがのぞんでいる商品を探すアシスタントです。ユーザが入力するキーワードをもとにおのぞみの商品を考え、RAGデータベースへベクトル検索を実行してください。",
+      tools: [rag_tool]
+    )
+    assistant.add_message_and_run!(content: query)
   end
 
   private
@@ -118,3 +135,4 @@ end
 
 require_relative "./textspace/provider"
 require_relative "./textspace/raggerman"
+require_relative "./textspace/assistant_rag_tool"

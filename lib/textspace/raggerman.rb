@@ -170,11 +170,15 @@ class Textspace::Raggerman
   # end
 
   def ask_gpt4o(prompt)
-    openai = OpenAI::Client.new
-    res = openai.chat.completions.create(
-      messages: [{role: "user", content: prompt}],
-      model: :"gpt-4o"
+    openai = OpenAI::Client.new(access_token: ENV["OPENAI_API_KEY"])
+    res = openai.chat(
+      parameters: {
+        messages: [{role: "user", content: prompt}],
+        model: :"gpt-4o"
+
+      }
     )
-    res[:choices][0][:message][:content]
+    # res[:choices][0][:message][:content]
+    res.dig("choices", 0, "message", "content")
   end
 end
