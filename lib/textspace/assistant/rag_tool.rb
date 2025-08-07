@@ -1,6 +1,6 @@
 require "langchain"
 
-class Textspace::AssistantRagTool
+class Textspace::Assistant::RagTool
   extend Langchain::ToolDefinition
 
   define_function :search, description: "キーワードを入力して、ECサイトの商品一覧データベースから近い商品を検索します" do

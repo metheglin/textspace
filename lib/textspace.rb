@@ -114,17 +114,8 @@ class Textspace < DelegateClass(Array)
     chunks.reject{|chunk| ids_excluding.include?(chunk.id)}.first(k)
   end
 
-  def assistant_search(query, k)
-    llm = Langchain::LLM::OpenAI.new(
-      api_key: ENV["OPENAI_API_KEY"],
-    )
-    rag_tool = Textspace::AssistantRagTool.new(textspace: self)
-    assistant = Langchain::Assistant.new(
-      llm: llm,
-      instructions: "あなたはECサイトのユーザがのぞんでいる商品を探すアシスタントです。ユーザが入力するキーワードをもとにおのぞみの商品を考え、RAGデータベースへベクトル検索を実行してください。",
-      tools: [rag_tool]
-    )
-    assistant.add_message_and_run!(content: query)
+  def assistant_search(query, k, instructions: nil)
+    Textspace::Assistant.new(textspace: self, instructions: instructions).search(query, k)
   end
 
   private
@@ -135,4 +126,4 @@ end
 
 require_relative "./textspace/provider"
 require_relative "./textspace/raggerman"
-require_relative "./textspace/assistant_rag_tool"
+require_relative "./textspace/assistant"
