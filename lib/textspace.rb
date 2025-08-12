@@ -83,13 +83,8 @@ class Textspace < DelegateClass(Array)
 
   def index_search(query, k)
     return nil unless @ssindex
-    d, i = @ssindex.search(query, k)
-    chunks = i.to_a.map{|indice| self.values_at(*indice)}
-    {
-      chunks: chunks,
-      d: d,
-      i: i,
-    }
+    sims_list, indice_list = @ssindex.search(query, k)
+    chunks = indice_list.to_a.zip(sims_list.to_a).map{|indice,sims| self.values_at(*indice).zip(sims)}
   end
 
   def search(query, k)
