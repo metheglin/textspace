@@ -32,7 +32,7 @@ class Textspace::Smartman
       - where: どこでまたはどこの商品が必要か
       - why: なぜその商品が必要か
       - how: 金額や重さや配送方法など、どのような条件の商品が必要か
-      - exclude: 除外や否定表現を含む場合、必ずその情報を含めること
+      - exclude: 除外や否定表現を含む場合、「〜を探している」という文章になるように除外・否定の意図を伝えること
     EOS
     res = ask_gpt4o(text, q, mode: :robotic)
     JSON.parse(res)
@@ -126,7 +126,7 @@ class Textspace::Smartman
     chunks = chunks.map{|ch,sim|
       screen_result = res_screening_main["items"].find{|item| item["id"] == ch.id}
       if screen_result and score = screen_result["score"]
-        sim_scored = sim - ((5.0-score.to_f) * 0.1)
+        sim_scored = sim - ((5.0-score.to_f) * 0.05)
         [ch, sim_scored]
       else
         [ch, sim]
@@ -170,15 +170,25 @@ class Textspace::Smartman
   end
 
   def ask_screening_exclude(chunks, q_exclude)
+    # q = <<~EOS
+    #   以下のECサイトの商品それぞれについて以下カテゴリについて分析してJSONで出力せよ。
+    #   - items: 商品ごとの配列
+    #     - id: 入力された商品idを指定すること
+    #     - score: 
+    #       この商品textがコンテキスト「#{q_exclude}」に基づいているかを1-3のスケールで評価。
+    #       3: 完全にコンテキストに基づいている
+    #       2: 部分的にコンテキストに基づいている  
+    #       1: コンテキストを無視している
+    # EOS
     q = <<~EOS
       以下のECサイトの商品それぞれについて以下カテゴリについて分析してJSONで出力せよ。
       - items: 商品ごとの配列
         - id: 入力された商品idを指定すること
         - score: 
-          この商品textがコンテキスト「#{q_exclude}」に基づいているかを1-3のスケールで評価。
-          3: 完全にコンテキストに基づいている
-          2: 部分的にコンテキストに基づいている  
-          1: コンテキストを無視している
+          この商品textが「#{q_exclude}」の条件に一致するかどうかを1-3のスケールで評価。
+          3: 完全に条件に一致する
+          2: 部分的に条件に一致する
+          1: 条件に一致しない
     EOS
     text = chunks.map{|ch,sim| ch.to_h.to_json}.join("\n")
     res = ask_gpt4o(text, q, mode: :robotic)
