@@ -7,13 +7,27 @@ class Textspace::Smartman
   end
 
   def ask(user_prompt)
-    res_5w1h1e = ask_5w1h1e(user_prompt)
+    res_5w1h1e = ask_5w1h2e(user_prompt)
+    if res_5w1h1e["exception"]
+      return [
+        [],
+        {
+          message: "商品の検索・提案をお手伝いできます",
+          user_prompt: user_prompt,
+          data_5w1h1e: res_5w1h1e,
+          data_what_meta: nil,
+          possible_keywords: nil,
+          selected_keywords: nil,
+        }
+      ]
+    end
     res_what_meta = ask_what_meta(res_5w1h1e["what"])
     res_prioritized_keywords = ask_prioritized_keywords(res_5w1h1e, res_what_meta)
     chunks, selected_keywords = search_prioritized_keywords(res_prioritized_keywords, data_5w1h1e: res_5w1h1e, data_what_meta: res_what_meta)
     [
       chunks,
       {
+        message: nil,
         user_prompt: user_prompt,
         data_5w1h1e: res_5w1h1e,
         data_what_meta: res_what_meta,
@@ -23,7 +37,7 @@ class Textspace::Smartman
     ]
   end
 
-  def ask_5w1h1e(text)
+  def ask_5w1h2e(text)
     q = <<~EOS
       ECサイトで商品を探しているユーザの入力について、以下カテゴリについて分析してJSONで出力せよ。不明なものは null とすること。
       - what: 何をのぞんでいるか
@@ -33,6 +47,7 @@ class Textspace::Smartman
       - why: なぜその商品が必要か
       - how: 金額や重さや配送方法など、どのような条件の商品が必要か
       - exclude: 除外や否定表現を含む場合、「〜を探している」という文章になるように除外・否定の意図を伝えること
+      - exception: あきらかに商品を探しているわけではない入力の場合true。デフォルトはfalse
     EOS
     res = ask_gpt4o(text, q, mode: :robotic)
     JSON.parse(res)
@@ -65,8 +80,12 @@ class Textspace::Smartman
   def ask_what_meta(text)
     q = <<~EOS
       以下のECサイトの検索キーワードから以下カテゴリについて分析してJSONで出力せよ。
-      - clear_image: 入力から具体的で特定的な商品（またはカテゴリ）がイメージできる場合はtrue、そうでない場合はfalse
-      - descriptive: 入力が「記述的いいかえ」である場合は、それが指し示している具体的な商品名またはカテゴリ名を最大3つあげ、配列形式とする。そうでない場合はnull
+      - clear_image: 
+        - true: ユーザが「買うモノが具体的に決まっている」状態。「具体的な商品名/型番/ブランド+シリーズ」または「具体的なカテゴリがイメージできるもの」
+        - false: 目的/用途/イベントなどから何かほしいものが見つかるか探している
+      - descriptive: 
+        - 入力が「具体的な商品やカテゴリ名の記述的いいかえ」である場合は、それが指し示す名称を最大3つあげ、配列形式とする
+        - そうでない場合はnull
     EOS
     res = ask_gpt4o(text, q, mode: :robotic)
     JSON.parse(res)

@@ -7,6 +7,15 @@ class Textspace < DelegateClass(Array)
 
   VERSION = "0.1.0"
 
+  class << self
+    def sample1
+      require "csv"
+      csv = CSV.new(File.open("tmp/sample_products.csv"))
+      texts = csv.map{|r| r[0]}
+      new(model: "openai/text-embedding-3-large", texts: texts)
+    end
+  end
+
   class Chunk < Struct.new(:id, :text, keyword_init: true)
   end
 
@@ -122,3 +131,4 @@ end
 require_relative "./textspace/provider"
 require_relative "./textspace/raggerman"
 require_relative "./textspace/assistant"
+require_relative "./textspace/smartman"
