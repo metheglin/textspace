@@ -12,7 +12,9 @@ class Textspace < DelegateClass(Array)
       require "csv"
       csv = CSV.new(File.open("tmp/sample_products.csv"))
       texts = csv.map{|r| r[0]}
-      new(model: "openai/text-embedding-3-large", texts: texts)
+      ts = new(model: "openai/text-embedding-3-large", texts: texts)
+      ts.ssindex = Faiss::Index.load("tmp/embeddings.bin")
+      ts
     end
   end
 

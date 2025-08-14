@@ -150,7 +150,7 @@ class Textspace::Smartman
       else
         [ch, sim]
       end
-    }
+    }.select{|ch,sim| sim > 0}
     
     if q_exclude
       pp "screening 'exclude' #{q_exclude}"
@@ -165,7 +165,7 @@ class Textspace::Smartman
         else
           [ch, sim]
         end
-      }
+      }.select{|ch,sim| sim > 0}
     end
     chunks
   end
